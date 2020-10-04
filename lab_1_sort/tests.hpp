@@ -108,19 +108,21 @@ void tests_sort_array() {
 	auto res1 = new ArraySequence<int>(res, 8);
 	auto res2 = new ListSequence<int>(res, 8);
 
-	Sort<int, bool> sort;
-	auto sorter_shell = sort.shell_sort(err);
+	auto sort = Sort<int, std::function<bool(Sequence<int>*, int, int)>>();
 
+	auto less = [](Sequence<int>* seq, int first, int last){
+		return seq->Get(first) < seq->Get(last);
+	};
 	auto cmp = 	[](Sequence<int> *t, Sequence<int> *p) {
 		return *t == *p;
 	};
 
+	auto sorter_shell = sort.shell_sort(err, less);
+	auto sorter_hoap = sort.heap_sort(list, less);
+	auto sorter_quick = sort.quick_sort(err, less);
+
 	AssertEqual(res1, sorter_shell, "Shell sort", cmp);
-
-	auto sorter_hoap = sort.heap_sort(list);
 	AssertEqual(res2, sorter_hoap, "Hoap sort", cmp);
-
-	auto sorter_quick = sort.quick_sort(err, 0, err->getLength() - 1);
 	AssertEqual(res1, sorter_quick, "Quick sort", cmp);
 }
 

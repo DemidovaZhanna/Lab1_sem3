@@ -5,19 +5,14 @@
 #include "ArraySequence.h"
 
 template <typename T>
-bool cmp(Sequence<T>* arr, size_t first, size_t last){
-	return arr->Get(first) < arr->Get(last);
-}
-
-template <typename T>
 inline void replacing_neighbors(Sequence<T>* seq, size_t first, size_t last) {
 	T k = seq->Get(first);
 	seq->Get(first) = seq->Get(last);
 	seq->Get(last) = k;
 }
 
-template <typename T>
-void heapify(Sequence<T> *seq, int heap_size, int i) {
+template <typename T, typename Func>
+void heapify(Sequence<T> *seq, int heap_size, int i, Func cmp) {
 	int largest = i;
 
 	int l = 2*i + 1;
@@ -31,22 +26,32 @@ void heapify(Sequence<T> *seq, int heap_size, int i) {
 
 	if (largest != i) { //если самый большой элемент не корень
 		replacing_neighbors(seq, i, largest);
-		heapify(seq, heap_size, largest);
+		heapify(seq, heap_size, largest, cmp);
 	}
 }
 
 
-template <typename T, typename F>
+template <typename T, typename Func>
 class Sort
 {
 public:
-	static Sequence<T>* shell_sort(Sequence<T> *seq/*, F cmp*/);
-	static Sequence<T>* heap_sort(Sequence<T> *seq/*, F cmp*/);
-	static Sequence<T>* quick_sort(Sequence<T> *seq, int begin, int end/*, F cmp*/);
+	Sort(){}
+
+	Sequence<T>* shell_sort(Sequence<T> *seq, Func cmp = [](auto a, auto b){
+		return a < b;
+	});
+	Sequence<T>* heap_sort(Sequence<T> *seq, Func cmp = [](auto a, auto b){
+		return a < b;
+	});
+	Sequence<T>* quick_sort(Sequence<T> *seq, Func cmp = [](auto a, auto b){
+		return a < b;
+	});
+	Sequence<T>* _quick_sort(Sequence<T> *seq, int begin, int end, Func cmp);
 };
 
-template<typename T, typename F>
-Sequence<T> *Sort<T, F>::shell_sort(Sequence<T> *seq)
+
+template<typename T, typename Func>
+Sequence<T> *Sort<T, Func>::shell_sort(Sequence<T> *seq, Func cmp)
 {
 	int step;
 
@@ -58,8 +63,8 @@ Sequence<T> *Sort<T, F>::shell_sort(Sequence<T> *seq)
 	return seq;
 }
 
-template<typename T, typename F>
-Sequence<T> *Sort<T, F>::heap_sort(Sequence<T> *seq)
+template<typename T, typename Func>
+Sequence<T> *Sort<T, Func>::heap_sort(Sequence<T> *seq, Func cmp)
 {
 	ArraySequence<T> *arr = new ArraySequence<T>();
 
@@ -68,27 +73,33 @@ Sequence<T> *Sort<T, F>::heap_sort(Sequence<T> *seq)
 
 	//строим кучу(перегруппировав массив)
 	for (int i = arr->getLength()/2 - 1; i >= 0; i--)
-		heapify(arr, arr->getLength(), i);
+		heapify(arr, arr->getLength(), i, cmp);
 
 	for (int i = arr->getLength() - 1; i >= 0; i--) {
 		replacing_neighbors(arr, i, 0);
-		heapify(arr, i, 0);
+		heapify(arr, i, 0, cmp);
 	}
 
 	return arr;
 }
 
-template<typename T, typename F>
-Sequence<T>* Sort<T, F>::quick_sort(Sequence<T> *seq, int begin, int end)
+template<typename T, typename Func>
+Sequence<T> *Sort<T, Func>::quick_sort(Sequence<T> *seq, Func cmp)
+{
+	return _quick_sort(seq, 0, seq->getLength() - 1, cmp);
+}
+
+template<typename T, typename Func>
+Sequence<T>* Sort<T, Func>::_quick_sort(Sequence<T> *seq, int begin, int end, Func cmp)
 {
 	int b = begin,
 		e = end;
-	int kon = end;
+	int kon = (begin + end) / 2;
 
 	do {
 		while (cmp(seq, begin, kon))
 			begin++;
-		while(cmp(seq, kon, end))
+		while(cmp(seq,kon, end))
 			end--;
 		if (begin <= end) {
 			replacing_neighbors(seq, begin, end);
@@ -98,9 +109,9 @@ Sequence<T>* Sort<T, F>::quick_sort(Sequence<T> *seq, int begin, int end)
 	} while (begin <= end);
 
 	if (b < end)
-		seq = quick_sort(seq, b, end);
+		seq = _quick_sort(seq, b, end, cmp);
 	if (begin < e)
-		seq = quick_sort(seq, begin, e);
+		seq = _quick_sort(seq, begin, e, cmp);
 
 	return seq;
 }
