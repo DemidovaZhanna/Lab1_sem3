@@ -8,7 +8,6 @@ CppApplication {
         "LinkedList.h",
         "ListSequence.h",
         "Sequence.h",
-        "interface.cpp",
         "interface.h",
         "main.cpp",
         "sort.h",
